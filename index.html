@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Цифровой каталог МАФ Великого Новгорода</title>
+<style>
+  * {margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Arial, sans-serif;}
+  body {background:#f4f6f8; color:#333;}
+  header {background:#2c3e50; color:#fff; text-align:center; padding:40px 15px;}
+  header h1 {font-size:2rem; margin-bottom:10px;}
+  header p {font-size:1rem; opacity:0.9;}
+  nav a {color:#fff; margin:0 10px; text-decoration:none; font-weight:600;}
+  nav a:hover {text-decoration:underline;}
+
+  .filters {
+    display:flex; flex-wrap:wrap; justify-content:center; gap:15px;
+    background:#fff; padding:15px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin:20px auto;
+    border-radius:10px; max-width:1100px;
+  }
+  .filter label {margin-right:8px; font-weight:600;}
+  .filter select {
+    padding:5px 10px; border-radius:5px; border:1px solid #ccc; background:#f9f9f9;
+  }
+
+  .catalog {
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap:20px;
+    padding:20px;
+    max-width:1200px;
+    margin:auto;
+  }
+
+  .card {
+    background:#fff; border-radius:10px; overflow:hidden;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+    transition:transform 0.2s; cursor:pointer;
+  }
+  .card:hover {transform:translateY(-4px);}
+  .card img {width:100%; height:160px; object-fit:cover;}
+  .card-content {padding:15px;}
+  .card-content h3 {font-size:1.2rem; margin-bottom:8px; color:#2c3e50;}
+  .card-content p {font-size:0.9rem; margin-bottom:4px; line-height:1.4;}
+
+  .card[onclick*="Фонарь Классический"] img,
+  .card[onclick*="Фонарь Прайд"] img {
+    object-fit: contain;
+    background: #f8f9fa;
+    padding: 15px;
+    height: 145px;
+  }
+
+  footer {
+    background:#2c3e50; color:#fff; text-align:center;
+    padding:15px; margin-top:40px; font-size:0.9rem;
+  }
+
+  .modal {
+    display:none; position:fixed; z-index:1000; left:0; top:0;
+    width:100%; height:100%; overflow:auto; background:rgba(0,0,0,0.5);
+  }
+  .modal-content {
+    background:#fff; margin:5% auto; padding:20px; border-radius:10px;
+    width:90%; max-width:600px; position:relative;
+  }
+  .close {
+    position:absolute; top:10px; right:15px; font-size:1.5rem; font-weight:bold;
+    color:#333; cursor:pointer;
+  }
+  .modal-img {width:100%; height:auto; margin-bottom:15px; border-radius:8px; display:none;}
+  .modal h3 {color:#2c3e50; margin-bottom:10px;}
+  #modal-long {white-space: pre-line;}
+</style>
+
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+</head>
+<body>
+
+<header>
+  <h1>Цифровой каталог МАФ Великого Новгорода</h1>
+  <p>Единая база малых архитектурных форм</p>
+  <nav>
+    <a href="#catalog">Каталог</a>
+    <a href="#footer">Контакты</a>
+  </nav>
+</header>
+
+<section class="filters">
+  <div class="filter">
+    <label for="category">Категория:</label>
+    <select id="category">
+      <option value="">Все</option>
+      <option value="Скамейки">Скамейки</option>
+      <option value="Урны">Урны</option>
+      <option value="Киоски">Киоски</option>
+      <option value="Указатели">Указатели</option>
+      <option value="Велопарковки">Велопарковки</option>
+      <option value="Освещение">Освещение</option>
+      <option value="Кашпо">Кашпо</option>
+      <option value="Качели парковые">Качели парковые</option>
+      <option value="Шезлонги">Шезлонги</option>
+      <option value="Болларды">Болларды</option>
+    </select>
+  </div>
+  <div class="filter">
+    <label for="manufacturer">Производитель:</label>
+    <select id="manufacturer">
+      <option value="">Все</option>
+      <option value="EcoStreet">EcoStreet</option>
+      <option value="UrbanDesign">UrbanDesign</option>
+      <option value="ParkLine">ParkLine</option>
+      <option value="Аданат">Аданат</option>
+      <option value="МАФ_Маркет">МАФ Маркет</option>
+      <option value="Стоунхендж.рус">Стоунхендж.рус</option>
+      <option value="Axyforma">Axyforma</option>
+      <option value="7_Скамеек">7 Скамеек</option>
+      <option value="Сарос">Сарос</option>
+    </select>
+  </div>
+  <div class="filter">
+    <label for="service">Обслуживающая организация:</label>
+    <select id="service">
+      <option value="">Все</option>
+      <option value="Парки_Великого_Новгорода">Парки Великого Новгорода</option>
+      <option value="Администрация_города">Администрация города</option>
+      <option value="Горхоз">Горхоз</option>
+    </select>
+  </div>
+  <div class="filter">
+    <label for="size">Размер:</label>
+    <select id="size">
+      <option value="">Все</option>
+      <option value="Малые">Малые</option>
+      <option value="Средние">Средние</option>
+      <option value="Большие">Большие</option>
+    </select>
+  </div>
+</section>
+
+<section id="catalog" class="catalog">
+
+<!-- ===== СКАМЬИ 3D ===== -->
+<div class="card" data-category="Скамейки" data-manufacturer="МАФ маркет" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Скамья Река', 'МАФ маркет', 'Парки Великого Новгорода', 'Парковая скамья с волнообразным дизайном', 'Назначение: отдых в парках и скверах.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 1800×650×830 мм.\nОсобенности: эргономичная форма, устойчива к влаге, легко чистится.', 'models/reka.glb')">
+  <img src="images/reka.png" alt="Скамья Река">
+  <div class="card-content">
+    <h3>Скамья Река</h3>
+    <p><strong>Производитель:</strong> МАФ маркет</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Парковая скамья с волнообразным дизайном</p>
+  </div>
+</div>
+
+<div class="card" data-category="Скамейки" data-manufacturer="МАФ маркет" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Скамья Лес', '7 Скамеек', 'Парки Великого Новгорода', 'Современная скамья с плавными линиями', 'Назначение: отдых в парках.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 1800×630×830 мм.\nОсобенности: изогнутый дизайн создаёт ощущение движения.', 'models/Skamya_5.glb')">
+  <img src="images/Skamya_2.png" alt="Скамья Лес">
+  <div class="card-content">
+    <h3>Скамья Лес</h3>
+    <p><strong>Производитель:</strong> 7 Скамеек</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Современная скамья с плавными линиями</p>
+  </div>
+</div>
+
+
+<div class="card" data-category="Скамейки" data-manufacturer="Аданат" data-service="Парки_Великого_Новгорода" data-size="Большие" onclick="openModal('Скамья История', '7 Скамеек', 'Парки Великого Новгорода', 'Современная скамья с плавными линиями', 'Назначение: отдых в парках.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 3000×780×900 мм.\nОсобенности: изогнутый дизайн создаёт ощущение движения.', 'models/Skamya_5.glb')">
+  <img src="images/Skamya_3.png" alt="Скамья История">
+  <div class="card-content">
+    <h3>Скамья История</h3>
+    <p><strong>Производитель:</strong> 7 Скамеек</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Современная скамья с плавными линиями</p>
+  </div>
+</div>
+
+
+<div class="card" data-category="Скамейки" data-manufacturer="7 Смакеек" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Скамья Шарлиз', '7 Скамеек', 'Парки Великого Новгорода', 'Современная скамья с плавными линиями', 'Назначение: отдых в парках.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 1800×650×850 мм.\nОсобенности: изогнутый дизайн создаёт ощущение движения.', 'models/Skamya_5.glb')">
+  <img src="images/Skamya_4.png" alt="Скамья Шарлиз">
+  <div class="card-content">
+    <h3>Скамья Шарлиз</h3>
+    <p><strong>Производитель:</strong> 7 Скамеек</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Современная скамья с плавными линиями</p>
+  </div>
+</div>
+
+<div class="card" data-category="Скамейки" data-manufacturer="7 Смакеек" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Скамья Дели', '7 Скамеек', 'Парки Великого Новгорода', 'Современная скамья с плавными линиями', 'Назначение: отдых в парках.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 1800×630×800 мм.\nОсобенности: изогнутый дизайн создаёт ощущение движения.', 'models/Skamya_5.glb')">
+  <img src="images/Skamya_5.png" alt="Скамья Дели">
+  <div class="card-content">
+    <h3>Скамья Дели</h3>
+    <p><strong>Производитель:</strong> 7 Скамеек</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Современная скамья с плавными линиями</p>
+  </div>
+</div>
+
+<div class="card" data-category="Скамейки" data-manufacturer="Аданат" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Скамья Арка', 'Аданат', 'Парки Великого Новгорода', 'Монументальная парковая скамья', 'Назначение: центральные аллеи парков.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 1800×780×480 мм.\nОсобенности: арочная конструкция.', 'models/Skamya_6.glb')">
+  <img src="images/Skamya_6.png" alt="Скамья Арка">
+  <div class="card-content">
+    <h3>Скамья Арка</h3>
+    <p><strong>Производитель:</strong> Аданат</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Монументальная парковая скамья</p>
+  </div>
+</div>
+
+<div class="card" data-category="Скамейки" data-manufacturer="Аданат" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Скамья Мини', 'Аданат', 'Парки Великого Новгорода', 'Компактная скамья для небольших пространств', 'Назначение: малые скверы и дворы.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 1800×780×480 мм.\nОсобенности: компактная, лёгкая в установке.', 'models/Skamya_7.glb')">
+  <img src="images/Skamya_7.png" alt="Скамья Мини">
+  <div class="card-content">
+    <h3>Скамья Мини</h3>
+    <p><strong>Производитель:</strong> Аданат</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Компактная скамья для небольших пространств</p>
+  </div>
+</div>
+
+<div class="card" data-category="Скамейки" data-manufacturer="Аданат" data-service="Парки_Великого_Новгорода" data-size="Большие" onclick="openModal('Скамья Модерн', 'Аданат', 'Парки Великого Новгорода', 'Скамья в стиле модерн с коваными элементами', 'Назначение: парки, скверы.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 1800×800×880 мм.\nОсобенности: декоративные кованые элементы.', 'models/Skamya_8.glb')">
+  <img src="images/Skamya_8.png" alt="Скамья Модерн">
+  <div class="card-content">
+    <h3>Скамья Модерн</h3>
+    <p><strong>Производитель:</strong> Аданат</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Скамья в стиле модерн с коваными элементами</p>
+  </div>
+</div>
+
+<div class="card" data-category="Скамейки" data-manufacturer="Axyforma" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Скамья Гранд', 'Axyforma', 'Парки Великого Новгорода', 'Большая скамья для общественных пространств', 'Назначение: площади, общественные пространства.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 1800×500×450 мм.\nОсобенности: вместительная, прочная конструкция.', 'models/Skamya_9.glb')">
+  <img src="images/Skamya_9.png" alt="Скамья Гранд">
+  <div class="card-content">
+    <h3>Скамья Гранд</h3>
+    <p><strong>Производитель:</strong> Axyforma</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Большая скамья для общественных пространств</p>
+  </div>
+</div>
+
+<div class="card" data-category="Скамейки" data-manufacturer="Axyforma" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Скамья Гранд со спинкой', 'Axyforma', 'Парки Великого Новгорода', 'Большая скамья для общественных пространств', 'Назначение: площади, общественные пространства.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 1800×630×800 мм.\nОсобенности: вместительная, прочная конструкция.', 'models/Skamya_9.glb')">
+  <img src="images/Skamya_1.png" alt="Скамья Гранд со спинкой">
+  <div class="card-content">
+    <h3>Скамья Гранд со спинкой</h3>
+    <p><strong>Производитель:</strong> Axyforma</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Большая скамья для общественных пространств</p>
+  </div>
+</div>
+
+<div class="card" data-category="Скамейки" data-manufacturer="Axyforma" data-service="Парки_Великого_Новгорода" data-size="Большие" onclick="openModal('Скамья Город', 'Axyforma', 'Парки Великого Новгорода', 'Большая скамья для общественных пространств', 'Назначение: площади, общественные пространства.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 3000×550×800 мм.\nОсобенности: вместительная, прочная конструкция.', 'models/Skamya_9.glb')">
+  <img src="images/Skamya_10.png" alt="Скамья Город">
+  <div class="card-content">
+    <h3>Скамья Город</h3>
+    <p><strong>Производитель:</strong> Axyforma</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Большая скамья для общественных пространств</p>
+  </div>
+</div>
+
+<div class="card" data-category="Скамейки" data-manufacturer="Axyforma" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Скамья Замок', 'Axyforma', 'Парки Великого Новгорода', 'Большая скамья для общественных пространств', 'Назначение: площади, общественные пространства.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 1800×500×650 мм.\nОсобенности: вместительная, прочная конструкция.', 'models/Skamya_9.glb')">
+  <img src="images/Skamya_11.png" alt="Скамья Замок">
+  <div class="card-content">
+    <h3>Скамья Замок</h3>
+    <p><strong>Производитель:</strong> Axyforma</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Большая скамья для общественных пространств</p>
+  </div>
+</div>
+
+<!-- ===== СКАМЬИ ДРУГИХ ПРОИЗВОДИТЕЛЕЙ ===== -->
+<div class="card" data-category="Скамейки" data-manufacturer="EcoStreet" data-service="Горхоз" data-size="Средние" onclick="openModal('ГринСит', 'EcoStreet', 'Горхоз', 'Современная скамейка для улиц', 'Назначение: городские улицы.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 1500×500×800 мм.\nОсобенности: эргономичная форма, устойчива к влаге.', 'images/1.jpg')">
+  <img src="images/1.jpg" alt="ГринСит">
+  <div class="card-content">
+    <h3>ГринСит</h3>
+    <p><strong>Производитель:</strong> EcoStreet</p>
+    <p><strong>Обслуживание:</strong> Горхоз</p>
+    <p>Современная скамейка для улиц</p>
+  </div>
+</div>
+
+<div class="card" data-category="Скамейки" data-manufacturer="UrbanDesign" data-service="Администрация_города" data-size="Средние" onclick="openModal('СитиФлоу', 'UrbanDesign', 'Администрация города', 'Минималистичная парковая скамья', 'Назначение: современные городские парки.\nМатериал: сталь.\nГабариты (Д×Ш×В): 1400×450×750 мм.\nОсобенности: изогнутый минималистичный дизайн.', 'images/2.jpg')">
+  <img src="images/2.jpg" alt="СитиФлоу">
+  <div class="card-content">
+    <h3>СитиФлоу</h3>
+    <p><strong>Производитель:</strong> UrbanDesign</p>
+    <p><strong>Обслуживание:</strong> Администрация города</p>
+    <p>Минималистичная парковая скамья</p>
+  </div>
+</div>
+
+<div class="card" data-category="Скамейки" data-manufacturer="ParkLine" data-service="Горхоз" data-size="Большие" onclick="openModal('ПаркКласс', 'ParkLine', 'Горхоз', 'Классическая деревянная скамейка', 'Назначение: исторические парки.\nМатериал: дерево, чугун.\nГабариты (Д×Ш×В): 1600×550×800 мм.\nОсобенности: прочные материалы, высокая нагрузка.', 'images/3.jpg')">
+  <img src="images/3.jpg" alt="ПаркКласс">
+  <div class="card-content">
+    <h3>ПаркКласс</h3>
+    <p><strong>Производитель:</strong> ParkLine</p>
+    <p><strong>Обслуживание:</strong> Горхоз</p>
+    <p>Классическая деревянная скамейка</p>
+  </div>
+</div>
+
+<div class="card" data-category="Скамейки" data-manufacturer="EcoStreet" data-service="Горхоз" data-size="Большие" onclick="openModal('ЭкоЛежанка', 'EcoStreet', 'Горхоз', 'Экологичная скамейка', 'Назначение: парки, детские зоны.\nМатериал: ReWood, сталь.\nГабариты (Д×Ш×В): 1500×500×800 мм.\nОсобенности: из переработанных материалов, безопасна.', 'images/4.jpg')">
+  <img src="images/4.jpg" alt="ЭкоЛежанка">
+  <div class="card-content">
+    <h3>ЭкоЛежанка</h3>
+    <p><strong>Производитель:</strong> EcoStreet</p>
+    <p><strong>Обслуживание:</strong> Горхоз</p>
+    <p>Экологичная скамейка</p>
+  </div>
+</div>
+
+<!-- ===== ШЕЗЛОНГИ ===== -->
+<div class="card" data-category="Шезлонги" data-manufacturer="МАФ маркет" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Шезлонг-лежак', 'МАФ маркет', 'Парки Великого Новгорода', 'Парковый лежак для отдыха', 'Назначение: зоны отдыха в парках и на набережных.\nМатериал: лиственница, металлокаркас.\nГабариты (Д×Ш×В): 1630×600×935 мм.\nОсобенности: эргономичный наклон спинки, влагостойкое покрытие.', 'models/Shezlong.glb')">
+  <img src="images/Shezlong.png" alt="Шезлонг-лежак">
+  <div class="card-content">
+    <h3>Шезлонг-лежак</h3>
+    <p><strong>Производитель:</strong> МАФ маркет</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Парковый лежак для отдыха</p>
+  </div>
+</div>
+
+<div class="card" data-category="Шезлонги" data-manufacturer="Стоунхендж" data-service="Парки_Великого_Новгорода" data-size="Большие" onclick="openModal('Гавайская волна', 'Стоунхендж', 'Парки Великого Новгорода', 'Парковый лежак для отдыха', 'Назначение: зоны отдыха в парках и на набережных.\nМатериал: лиственница, металлокаркас.\nГабариты (Д×Ш×В): 1800×1850×1050 мм.\nОсобенности: удобная спинка, влагостойкое покрытие.', 'images/Shezlong_2.jpg')">
+  <img src="images/Shezlong_2.jpg" alt="Гавайская волна">
+  <div class="card-content">
+    <h3>Гавайская волна</h3>
+    <p><strong>Производитель:</strong> Стоунхендж</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Парковый лежак для отдыха</p>
+  </div>
+</div>
+
+<!-- ===== КАШПО ===== -->
+<div class="card" data-category="Кашпо" data-manufacturer="МАФ маркет" data-service="Парки_Великого_Новгорода" data-size="Большие" onclick="openModal('Вазон Бетонный круглый', 'МАФ маркет', 'Парки Великого Новгорода', 'Цветочница', 'Назначение: зоны отдыха в парках и на набережных.\nМатериал: бетонс.\nГабариты (Д×Ш×В): 1500×1500×935 мм.\nОсобенности: минималистичный дизайн, качественный материал.', 'models/Vazon_1.glb')">
+  <img src="images/Vazon_1.png" alt="Вазон Бетонный круглый">
+  <div class="card-content">
+    <h3>Вазон Бетонный круглый</h3>
+    <p><strong>Производитель:</strong> МАФ маркет</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Вазон для декоративного озеленения</p>
+  </div>
+</div>
+
+<div class="card" data-category="Кашпо" data-manufacturer="МАФ маркет" data-service="Парки_Великого_Новгорода" data-size="Малые" onclick="openModal('Вазон квадрат', 'МАФ маркет', 'Парки Великого Новгорода', 'Цветочница', 'Назначение: зоны отдыха в парках и на набережных.\nМатериал: металлокаркас.\nГабариты (Д×Ш×В): 500×500×500 мм.\nОсобенности: оригинальная современная цветочница.', 'models/Vazon_2.glb')">
+  <img src="images/Vazon_2.png" alt="Вазон Квадрат">
+  <div class="card-content">
+    <h3>Вазон Квадрат</h3>
+    <p><strong>Производитель:</strong> МАФ маркет</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Вазон для декоративного озеленения</p>
+  </div>
+</div>
+
+<div class="card" data-category="Кашпо" data-manufacturer="МАФ маркет" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Вазон Прямоугольник', 'МАФ маркет', 'Парки Великого Новгорода', 'Цветочница', 'Назначение: зоны отдыха в парках и на набережных.\nМатериал: металлокаркас.\nГабариты (Д×Ш×В): 1000×300×500 мм.\nОсобенности: оригинальная современная цветочница.', 'models/Vazon_3.glb')">
+  <img src="images/Vazon_3.png" alt="Вазон Прямоугольник">
+  <div class="card-content">
+    <h3>Вазон Прямоугольник</h3>
+    <p><strong>Производитель:</strong> МАФ маркет</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Вазон для декоративного озеленения</p>
+  </div>
+</div>
+
+<!-- ===== УРНЫ ===== -->
+<div class="card" data-category="Урны" data-manufacturer="UrbanDesign" data-service="Горхоз" data-size="Малые" onclick="openModal('Норберг', 'Аданат', 'Горхоз', 'Урна для улиц и парков', 'Назначение: скверы, пешеходные зоны.\nМатериал: металл.\nГабариты (Д×Ш×В): 400×400×800 мм.\nОсобенности: прочная конструкция, лёгкая очистка.', 'images/Urna_1.png')">
+  <img src="images/Urna_1.png" alt="Норберг">
+  <div class="card-content">
+    <h3>Норберг</h3>
+    <p><strong>Производитель:</strong> UrbanDesign</p>
+    <p><strong>Обслуживание:</strong> Горхоз</p>
+    <p>Урна для улиц и парков</p>
+  </div>
+</div>
+
+<div class="card" data-category="Урны" data-manufacturer="UrbanDesign" data-service="Горхоз" data-size="Малые" onclick="openModal('Эстетика', 'Аданат', 'Горхоз', 'Урна для улиц и парков', 'Назначение: скверы, пешеходные зоны.\nМатериал: дерево, металл.\nГабариты (Д×Ш×В): 400×400×800 мм.\nОсобенности: прочная конструкция, лёгкая очистка.', 'images/Urna_2.png')">
+  <img src="images/Urna_2.png" alt="Эстетика">
+  <div class="card-content">
+    <h3>Эстетика</h3>
+    <p><strong>Производитель:</strong> UrbanDesign</p>
+    <p><strong>Обслуживание:</strong> Горхоз</p>
+    <p>Урна для улиц и парков</p>
+  </div>
+</div>
+
+<div class="card" data-category="Урны" data-manufacturer="UrbanDesign" data-service="Горхоз" data-size="Малые" onclick="openModal('Город', 'МАФ маркет', 'Горхоз', 'Урна для улиц и парков', 'Назначение: скверы, пешеходные зоны.\nМатериал: дерево, металл.\nГабариты (Д×Ш×В): 500×500×800 мм.\nОсобенности: прочная конструкция, лёгкая очистка.', 'images/Urna_3.png')">
+  <img src="images/Urna_3.png" alt="Город">
+  <div class="card-content">
+    <h3>Город</h3>
+    <p><strong>Производитель:</strong> UrbanDesign</p>
+    <p><strong>Обслуживание:</strong> Горхоз</p>
+    <p>Урна для улиц и парков</p>
+  </div>
+</div>
+
+<div class="card" data-category="Урны" data-manufacturer="UrbanDesign" data-service="Горхоз" data-size="Малые" onclick="openModal('Стиль', 'Axyforma', 'Горхоз', 'Урна для улиц и парков', 'Назначение: скверы, пешеходные зоны.\nМатериал: металл.\nГабариты (Д×Ш×В): 500×400×800 мм.\nОсобенности: прочная конструкция, лёгкая очистка.', 'images/Urna_4.png')">
+  <img src="images/Urna_4.png" alt="Стиль">
+  <div class="card-content">
+    <h3>Стиль</h3>
+    <p><strong>Производитель:</strong> UrbanDesign</p>
+    <p><strong>Обслуживание:</strong> Горхоз</p>
+    <p>Урна для улиц и парков</p>
+  </div>
+</div>
+
+<div class="card" data-category="Урны" data-manufacturer="UrbanDesign" data-service="Горхоз" data-size="Малые" onclick="openModal('МеталБин', 'Axyforma', 'Горхоз', 'Урна для улиц и парков', 'Назначение: скверы, пешеходные зоны.\nМатериал: металл.\nГабариты (Д×Ш×В): 400×400×800 мм.\nОсобенности: прочная конструкция, лёгкая очистка.', 'images/5.jpg')">
+  <img src="images/5.jpg" alt="МеталБин">
+  <div class="card-content">
+    <h3>МеталБин</h3>
+    <p><strong>Производитель:</strong> UrbanDesign</p>
+    <p><strong>Обслуживание:</strong> Горхоз</p>
+    <p>Урна для улиц и парков</p>
+  </div>
+</div>
+
+<div class="card" data-category="Урны" data-manufacturer="EcoStreet" data-service="Горхоз" data-size="Средние" onclick="openModal('ЭкоТреш', 'EcoStreet', 'Горхоз', 'Урна с сортировкой отходов', 'Назначение: раздельный сбор мусора.\nМатериал: металл, пластик.\nГабариты (Д×Ш×В): 500×500×900 мм.\nОсобенности: сортировка отходов, устойчива к коррозии.', 'images/6.jpg')">
+  <img src="images/6.jpg" alt="ЭкоТреш">
+  <div class="card-content">
+    <h3>ЭкоТреш</h3>
+    <p><strong>Производитель:</strong> EcoStreet</p>
+    <p><strong>Обслуживание:</strong> Горхоз</p>
+    <p>Урна с сортировкой отходов</p>
+  </div>
+</div>
+
+<div class="card" data-category="Урны" data-manufacturer="ParkLine" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('ПаркКонтейнер', 'ParkLine', 'Парки Великого Новгорода', 'Классическая парковая урна', 'Назначение: парки, скверы.\nМатериал: дерево, металл.\nГабариты (Д×Ш×В): 450×450×850 мм.\nОсобенности: эстетичная конструкция, лёгкая очистка.', 'images/7.jpg')">
+  <img src="images/7.jpg" alt="ПаркКонтейнер">
+  <div class="card-content">
+    <h3>ПаркКонтейнер</h3>
+    <p><strong>Производитель:</strong> ParkLine</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Классическая парковая урна</p>
+  </div>
+</div>
+
+<div class="card" data-category="Урны" data-manufacturer="UrbanDesign" data-service="Горхоз" data-size="Малые" onclick="openModal('МиниВин', 'UrbanDesign', 'Горхоз', 'Маленькая урна для скверов', 'Назначение: малые зелёные зоны.\nМатериал: металл.\nГабариты (Д×Ш×В): 350×350×700 мм.\nОсобенности: компактная, лёгкая в обслуживании.', 'images/8.jpg')">
+  <img src="images/8.jpg" alt="МиниВин">
+  <div class="card-content">
+    <h3>МиниВин</h3>
+    <p><strong>Производитель:</strong> UrbanDesign</p>
+    <p><strong>Обслуживание:</strong> Горхоз</p>
+    <p>Маленькая урна для скверов</p>
+  </div>
+</div>
+
+<!-- ===== ОСВЕЩЕНИЕ ===== -->
+<div class="card" data-category="Освещение" data-manufacturer="Стоунхэндж" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Фонарь Классический', 'Стоунхэндж', 'Парки Великого Новгорода', 'Традиционный парковый фонарь', 'Назначение: освещение аллей.\nМатериал: металл, стекло.\nГабариты (В): высота 4000 мм.\nОсобенности: LED 76 Вт, степень защиты - IP65.', 'models/Fonar_1.glb')">
+  <img src="images/Fonar_1.png" alt="Фонарь Классический">
+  <div class="card-content">
+    <h3>Фонарь Классический</h3>
+    <p><strong>Производитель:</strong> Стоунхэндж</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Традиционный парковый фонарь</p>
+  </div>
+</div>
+
+<div class="card" data-category="Освещение" data-manufacturer="Сарос" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Фонарь Современный', 'Сарос', 'Парки Великого Новгорода', 'Фонарь в современном стиле', 'Назначение: освещение дорожек.\nМатериал: металл, пластик.\nГабариты (В): высота 3500 мм.\nОсобенности: LED 70 Вт, степень защиты - IP65.', 'models/Fonar_2.glb')">
+  <img src="images/Fonar_2.png" alt="Фонарь Современный">
+  <div class="card-content">
+    <h3>Фонарь Современный</h3>
+    <p><strong>Производитель:</strong> Сарос</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Фонарь в современном стиле</p>
+  </div>
+</div>
+
+<div class="card" data-category="Освещение" data-manufacturer="Сарос" data-service="Парки_Великого_Новгорода" data-size="Большие" onclick="openModal('Фонарь Прайд', 'Сарос', 'Парки Великого Новгорода', 'Высокий парковый фонарь Прайд', 'Назначение: освещение центральных аллей и площадей.\nМатериал: металл, стекло.\nГабариты (В): высота 5000 мм.\nОсобенности: LED-освещение, декоративный дизайн.', 'models/Fonar_3.glb')">
+  <img src="images/Fonar_3.png" alt="Фонарь Прайд">
+  <div class="card-content">
+    <h3>Фонарь Прайд</h3>
+    <p><strong>Производитель:</strong> Сарос</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Высокий парковый фонарь</p>
+  </div>
+</div>
+
+<div class="card" data-category="Освещение" data-manufacturer="Стоунхэндж" data-service="Горхоз" data-size="Средние" onclick="openModal('Фонарь Уличный', 'Стоунхэндж', 'Горхоз', 'Уличный фонарь для тротуаров', 'Назначение: освещение тротуаров.\nМатериал: металл, стекло.\nГабариты (В): высота 4000 мм.\nОсобенности: LED 70 Вт, степень защиты - IP65.', 'models/Fonar_4.glb')">
+  <img src="images/Fonar_4.png" alt="Фонарь Уличный">
+  <div class="card-content">
+    <h3>Фонарь Уличный</h3>
+    <p><strong>Производитель:</strong> Стоунхэндж</p>
+    <p><strong>Обслуживание:</strong> Горхоз</p>
+    <p>Уличный фонарь для тротуаров</p>
+  </div>
+</div>
+
+<div class="card" data-category="Освещение" data-manufacturer="Сарос" data-service="Горхоз" data-size="Средние" onclick="openModal('Фонарь Древность', 'Сарос', 'Горхоз', 'Уличный фонарь для тротуаров', 'Назначение: освещение тротуаров.\nМатериал: чугун, стекло.\nГабариты (В): высота 3500 мм.\nОсобенности: LED 70 Вт, степень защиты - IP64.', 'models/Fonar_5.glb')">
+  <img src="images/Fonar_5.png" alt="Фонарь Древность">
+  <div class="card-content">
+    <h3>Фонарь Древность</h3>
+    <p><strong>Производитель:</strong> Сарос</p>
+    <p><strong>Обслуживание:</strong> Горхоз</p>
+    <p>Уличный фонарь для тротуаров</p>
+  </div>
+</div>
+
+<!-- ===== КАЧЕЛИ ПАРКОВЫЕ ===== -->
+<div class="card" data-category="Качели парковые" data-manufacturer="Аданат" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Качели Парковые', 'Аданат', 'Парки Великого Новгорода', 'Качели для парков', 'Назначение: зоны отдыха и набережные.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 3000×570×2500 мм.\nОсобенности: безопасные сиденья, антивандальные крепления.', 'models/Kacheli_parkovye_1.glb')">
+  <img src="images/Kacheli_parkovye_1.png" alt="Качели Парковые">
+  <div class="card-content">
+    <h3>Качели Парковые</h3>
+    <p><strong>Производитель:</strong> Аданат</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Качели для парков</p>
+  </div>
+</div>
+
+<div class="card" data-category="Качели парковые" data-manufacturer="Аданат" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Качели Бриз', 'Аданат', 'Парки Великого Новгорода', 'Качели для парков', 'Назначение: зоны отдыха и набережные.\nМатериал: металл, дерево.\nГабариты (Д×Ш×В): 3000×1800×2700 мм.\nОсобенности: безопасные сиденья, антивандальные крепления.', 'models/Kacheli_parkovye_2.glb')">
+  <img src="images/Kacheli_parkovye_2.png" alt="Качели Бриз">
+  <div class="card-content">
+    <h3>Качели Бриз</h3>
+    <p><strong>Производитель:</strong> Аданат</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Качели для парков</p>
+  </div>
+</div>
+
+<div class="card" data-category="Качели парковые" data-manufacturer="Аданат" data-service="Парки_Великого_Новгорода" data-size="Большие" onclick="openModal('Качели в круге', 'Аданат', 'Горхоз', 'Качели для парков', 'Назначение: зоны отдыха и набережные.\nМатериал: металл, пластик.\nГабариты (Д×Ш×В): 3000×2000×2500 мм.\nОсобенности: безопасные сиденья, антивандальные крепления.', 'images/25.jpg')">
+  <img src="images/25.jpg" alt="Качели в круге">
+  <div class="card-content">
+    <h3>Качели Бриз</h3>
+    <p><strong>Производитель:</strong> Аданат</p>
+    <p><strong>Обслуживание:</strong> Горхоз</p>
+    <p>Качели для парков</p>
+  </div>
+</div>
+
+<!-- ===== ВЕЛОПАРКОВКИ ===== -->
+<div class="card" data-category="Велопарковки" data-manufacturer="МАФ_Маркет" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Велопарковка Стандарт', 'МАФ Маркет', 'Парки Великого Новгорода', 'Велопарковка на 8 велосипедов', 'Назначение: парковка велосипедов.\nМатериал: металл.\nГабариты (Д×Ш×В): 50×800×800 мм.\nОсобенности: надёжное крепление, защита от краж.', 'models/Veloparkovka_2.glb')">
+  <img src="images/Veloparkovka_2.png" alt="Велопарковка Стандарт">
+  <div class="card-content">
+    <h3>Велопарковка Стандарт</h3>
+    <p><strong>Производитель:</strong> МАФ Маркет</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Велопарковка на 6 велосипедов</p>
+  </div>
+</div>
+
+<div class="card" data-category="Велопарковки" data-manufacturer="МАФ_Маркет" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Велопарковка Большая', 'МАФ Маркет', 'Парки Великого Новгорода', 'Велопарковка на 12 велосипедов', 'Назначение: общественные места.\nМатериал: металл.\nГабариты (Д×Ш×В): 100×1000×800 мм.\nОсобенности: двухсторонняя конструкция, защитное покрытие.', 'models/Veloparkovka_1.glb')">
+  <img src="images/Veloparkovka_1.png" alt="Велопарковка Большая">
+  <div class="card-content">
+    <h3>Велопарковка Большая</h3>
+    <p><strong>Производитель:</strong> МАФ Маркет</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Велопарковка на 12 велосипедов</p>
+  </div>
+</div>
+
+<div class="card" data-category="Велопарковки" data-manufacturer="МАФ_Маркет" data-service="Парки_Великого_Новгорода" data-size="Малые" onclick="openModal('Велопарковка Город', 'МАФ Маркет', 'Парки Великого Новгорода', 'Велопарковка на 8 велосипедов', 'Назначение: общественные места.\nМатериал: металл.\nГабариты (Д×Ш×В): 3000×1000×800 мм.\nОсобенности: двухсторонняя конструкция, защитное покрытие.', 'models/Veloparkovka_3.glb')">
+  <img src="images/Veloparkovka_3.png" alt="Велопарковка Город">
+  <div class="card-content">
+    <h3>Велопарковка Город</h3>
+    <p><strong>Производитель:</strong> МАФ Маркет</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Велопарковка на 12 велосипедов</p>
+  </div>
+</div>
+
+<!-- ===== КИОСКИ ===== -->
+<div class="card" data-category="Киоски" data-manufacturer="EcoStreet" data-service="Администрация_города" data-size="Большие" onclick="openModal('ИнфоПавильон', 'EcoStreet', 'Администрация города', 'Информационный киоск', 'Назначение: туристические и информационные точки.\nМатериал: металл, стекло.\nГабариты (Д×Ш×В): 2000×1200×2500 мм.\nОсобенности: устойчив к погодным условиям.', 'images/9.jpg')">
+  <img src="images/9.jpg" alt="ИнфоПавильон">
+  <div class="card-content">
+    <h3>ИнфоПавильон</h3>
+    <p><strong>Производитель:</strong> EcoStreet</p>
+    <p><strong>Обслуживание:</strong> Администрация города</p>
+    <p>Информационный киоск</p>
+  </div>
+</div>
+
+<div class="card" data-category="Киоски" data-manufacturer="UrbanDesign" data-service="Администрация_города" data-size="Большие" onclick="openModal('СувенирБокс', 'UrbanDesign', 'Администрация города', 'Мини-киоск для сувениров', 'Назначение: сувенирная торговля на улицах и в парках.\nМатериал: металл, ПВХ.\nГабариты (Д×Ш×В): 1800×1000×2200 мм.\nОсобенности: компактная конструкция.', 'images/10.jpg')">
+  <img src="images/10.jpg" alt="СувенирБокс">
+  <div class="card-content">
+    <h3>СувенирБокс</h3>
+    <p><strong>Производитель:</strong> UrbanDesign</p>
+    <p><strong>Обслуживание:</strong> Администрация города</p>
+    <p>Мини-киоск для сувениров</p>
+  </div>
+</div>
+
+<div class="card" data-category="Киоски" data-manufacturer="ParkLine" data-service="Парки_Великого_Новгорода" data-size="Большие" onclick="openModal('ПаркШоп', 'ParkLine', 'Парки Великого Новгорода', 'Классический киоск для парка', 'Назначение: торговля в парках.\nМатериал: дерево, стекло.\nГабариты (Д×Ш×В): 2000×1200×2400 мм.\nОсобенности: традиционный дизайн, высокая нагрузка.', 'images/11.jpg')">
+  <img src="images/11.jpg" alt="ПаркШоп">
+  <div class="card-content">
+    <h3>ПаркШоп</h3>
+    <p><strong>Производитель:</strong> ParkLine</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Классический киоск для парка</p>
+  </div>
+</div>
+
+<div class="card" data-category="Киоски" data-manufacturer="EcoStreet" data-service="Администрация_города" data-size="Большие" onclick="openModal('МодулСтанция', 'EcoStreet', 'Администрация города', 'Модульный киоск под любые задачи', 'Назначение: универсальное использование.\nМатериал: металл, ДСП.\nГабариты (Д×Ш×В): 1900×1100×2300 мм.\nОсобенности: гибкая конструкция, легко адаптируется.', 'images/12.jpg')">
+  <img src="images/12.jpg" alt="МодулСтанция">
+  <div class="card-content">
+    <h3>МодулСтанция</h3>
+    <p><strong>Производитель:</strong> EcoStreet</p>
+    <p><strong>Обслуживание:</strong> Администрация города</p>
+    <p>Модульный киоск под любые задачи</p>
+  </div>
+</div>
+
+<!-- ===== УКАЗАТЕЛИ ===== -->
+<div class="card" data-category="Указатели" data-manufacturer="Axyforma" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Инфостенд Современный', 'Axyforma', 'Парки Великого Новгорода', 'Современный информационный стенд с подсветкой', 'Назначение: информирование посетителей парка.\nМатериал: металл, стекло.\nГабариты (Д×Ш×В): 1800×1200×2500 мм.\nОсобенности: LED-подсветка, защита от вандализма, крепление плакатов.', 'models/Inform_stend_1.glb')">
+  <img src="images/Inform_stend_1.png" alt="Инфостенд Современный">
+  <div class="card-content">
+    <h3>Инфостенд Современный</h3>
+    <p><strong>Производитель:</strong> АНО ЦРГСНО</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Информационный стенд с подсветкой</p>
+  </div>
+</div>
+
+<div class="card" data-category="Указатели" data-manufacturer="UrbanDesign" data-service="Администрация_города" data-size="Средние" onclick="openModal('Навигатор', 'UrbanDesign', 'Администрация города', 'Указатель направления для улиц', 'Назначение: ориентирование в городской среде.\nМатериал: металл.\nГабариты (В): высота 2500 мм.\nОсобенности: высокая видимость, устойчив к погоде.', 'images/13.jpg')">
+  <img src="images/13.jpg" alt="Навигатор">
+  <div class="card-content">
+    <h3>Навигатор</h3>
+    <p><strong>Производитель:</strong> UrbanDesign</p>
+    <p><strong>Обслуживание:</strong> Администрация города</p>
+    <p>Указатель направления для улиц</p>
+  </div>
+</div>
+
+<div class="card" data-category="Указатели" data-manufacturer="ParkLine" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('ПаркСтоп', 'ParkLine', 'Парки Великого Новгорода', 'Парковый указатель', 'Назначение: навигация в парках.\nМатериал: дерево, металл.\nГабариты (В): высота 2000 мм.\nОсобенности: эстетичный дизайн, легко читается.', 'images/14.jpg')">
+  <img src="images/14.jpg" alt="ПаркСтоп">
+  <div class="card-content">
+    <h3>ПаркСтоп</h3>
+    <p><strong>Производитель:</strong> ParkLine</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Парковый указатель</p>
+  </div>
+</div>
+
+<div class="card" data-category="Указатели" data-manufacturer="EcoStreet" data-service="Горхоз" data-size="Средние" onclick="openModal('ЭкоМаркер', 'EcoStreet', 'Горхоз', 'Экологичный указатель', 'Назначение: навигация в зелёных зонах.\nМатериал: металл, дерево.\nГабариты (В): высота 2200 мм.\nОсобенности: устойчив к влаге, экологичные материалы.', 'images/15.jpg')">
+  <img src="images/15.jpg" alt="ЭкоМаркер">
+  <div class="card-content">
+    <h3>ЭкоМаркер</h3>
+    <p><strong>Производитель:</strong> EcoStreet</p>
+    <p><strong>Обслуживание:</strong> Горхоз</p>
+    <p>Экологичный указатель</p>
+  </div>
+</div>
+
+<div class="card" data-category="Указатели" data-manufacturer="UrbanDesign" data-service="Администрация_города" data-size="Средние" onclick="openModal('ГородСигн', 'UrbanDesign', 'Администрация города', 'Минималистичный указатель', 'Назначение: городские улицы.\nМатериал: алюминий.\nГабариты (В): высота 1800 мм.\nОсобенности: лёгкий, современный дизайн.', 'images/16.jpg')">
+  <img src="images/16.jpg" alt="ГородСигн">
+  <div class="card-content">
+    <h3>ГородСигн</h3>
+    <p><strong>Производитель:</strong> UrbanDesign</p>
+    <p><strong>Обслуживание:</strong> Администрация города</p>
+    <p>Минималистичный указатель</p>
+  </div>
+</div>
+
+<!-- ===== БОЛЛАРДЫ ===== -->
+<div class="card" data-category="Болларды" data-manufacturer="Аданат" data-service="Парки_Великого_Новгорода" data-size="Малые" onclick="openModal('Полусфера', 'Аданат', 'Парки Великого Новгорода', 'Парковочный столбик из бетона', 'Назначение: выделяет пешеходные зоны и зоны парковки.\nМатериал: бетон.\nГабариты (Д×Ш×В): 500×500×250 мм.\nОсобенности: крепится хим. анкером/расстановкой', 'models/Bollard_1.glb')">
+  <img src="images/Bollard_1.png" alt="Полусфера">
+  <div class="card-content">
+    <h3>Полусфера</h3>
+    <p><strong>Производитель:</strong> Аданат-</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Простая и надежная конструкция</p>
+  </div>
+</div>
+
+<div class="card" data-category="Болларды" data-manufacturer="Аданат" data-service="Парки_Великого_Новгорода" data-size="Средние" onclick="openModal('Сфера', 'Аданат', 'Парки Великого Новгорода', 'Парковочный столбик из бетона', 'Назначение: выделяет пешеходные зоны и зоны парковки.\nМатериал: бетон.\nГабариты (Д×Ш×В): 500×500×460 мм.\nОсобенности: крепится хим. анкером/расстановкой', 'models/Bollard_2.glb')">
+  <img src="images/Bollard_2.png" alt="Сфера">
+  <div class="card-content">
+    <h3>Сфера</h3>
+    <p><strong>Производитель:</strong> Аданат-</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Простая и надежная конструкция</p>
+  </div>
+</div>
+
+<div class="card" data-category="Болларды" data-manufacturer="Аданат" data-service="Парки_Великого_Новгорода" data-size="Малые" onclick="openModal('Париж', 'Аданат', 'Парки Великого Новгорода', 'Парковочный столбик', 'Назначение: выделяет пешеходные зоны и зоны парковки.\nМатериал: металл.\nГабариты (Д×Ш×В): 60×60×1070 мм.\nОсобенности: современный лаконичный дизайн', 'images/Bollard_3.jpg')">
+  <img src="images/Bollard_3.jpg" alt="Париж">
+  <div class="card-content">
+    <h3>Париж</h3>
+    <p><strong>Производитель:</strong> Аданат-</p>
+    <p><strong>Обслуживание:</strong> Парки Великого Новгорода</p>
+    <p>Простая и надежная конструкция</p>
+  </div>
+</div>
+
+</section>
+
+<section id="manufacturers-section" style="text-align:center; margin:40px 0;">
+  <h2 style="font-size:1.4rem; color:#2c3e50; margin-bottom:20px;">Производители</h2>
+  <div id="manufacturers"
+       style="display:flex; justify-content:center; align-items:center;
+              gap:30px; flex-wrap:wrap; max-width:1100px; margin:0 auto;">
+    <img src="images/21.jpg" alt="EcoStreet"    style="height:120px; width:auto;">
+    <img src="images/22.jpg" alt="UrbanDesign"  style="height:120px; width:auto;">
+    <img src="images/23.jpg" alt="ParkLine"     style="height:120px; width:auto;">
+    <img src="images/31.png" alt="Axyforma"     style="height:110px; width:auto;">
+    <img src="images/26.png" alt="Стоунхендж"   style="height:60px;  width:auto;">
+    <img src="images/27.jpg" alt="Аданат"       style="height:120px; width:auto;">
+    <img src="images/28.jpg" alt="Сарос"        style="height:120px; width:auto;">
+    <img src="images/29.jpg" alt="МАФ маркет"   style="height:120px; width:auto;">
+    <img src="images/30.png" alt="7 скамеек"    style="height:120px; width:auto;">
+  </div>
+</section>
+
+<!-- ===== МОДАЛЬНОЕ ОКНО ===== -->
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+   
+    <model-viewer id="modal-3d"
+      style="width:100%; height:400px; display:none;"
+      camera-controls auto-rotate shadow-intensity="1" ar>
+    </model-viewer>
+
+    <img id="modal-img" class="modal-img" src="" alt="">
+
+    <h3 id="modal-title"></h3>
+    <p><strong>Производитель:</strong> <span id="modal-manufacturer"></span></p>
+    <p><strong>Обслуживающая организация:</strong> <span id="modal-service"></span>
+</p>
+    <p id="modal-short" style="margin-top:8px; font-weight:600;"></p>
+    <p id="modal-long" style="margin-top:8px;"></p>
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer id="footer">
+  <p>©2026 Цифровой каталог МАФ. Все права защищены.</p>
+</footer>
+
+<!-- ===== СКРИПТЫ ===== -->
+<script>
+  // --- Открытие модального окна (6 параметров) ---
+  function openModal(title, manufacturer, service, shortDesc, longDesc, media) {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-manufacturer').textContent = manufacturer;
+    document.getElementById('modal-service').textContent = service;
+    document.getElementById('modal-short').textContent = shortDesc;
+    document.getElementById('modal-long').textContent = longDesc;
+
+    var viewer = document.getElementById('modal-3d');
+    var img = document.getElementById('modal-img');
+
+    // Если media заканчивается на .glb — показываем 3D, иначе картинку
+    if (media && media.toLowerCase().endsWith('.glb')) {
+      viewer.setAttribute('src', media);
+      viewer.style.display = 'block';
+      img.style.display = 'none';
+      img.src = '';
+    } else if (media) {
+      img.src = media;
+      img.style.display = 'block';
+      viewer.style.display = 'none';
+      viewer.removeAttribute('src');
+    } else {
+      // media пустой (например, у Шезлонга нет ни 3D, ни отдельного media)
+      img.style.display = 'none';
+      viewer.style.display = 'none';
+      viewer.removeAttribute('src');
+    }
+
+    document.getElementById('modal').style.display = 'block';
+  }
+
+  // --- Закрытие модального окна ---
+  function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+    var viewer = document.getElementById('modal-3d');
+    viewer.removeAttribute('src'); // останавливаем 3D, чтобы не грузило
+  }
+
+  // Закрытие по клику на тёмный фон
+  window.addEventListener('click', function(e) {
+    var modal = document.getElementById('modal');
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+
+  // --- Фильтрация карточек ---
+  function applyFilters() {
+    var category = document.getElementById('category').value;
+    var manufacturer = document.getElementById('manufacturer').value;
+    var service = document.getElementById('service').value;
+    var size = document.getElementById('size').value;
+
+    var cards = document.querySelectorAll('.catalog .card');
+
+    cards.forEach(function(card) {
+      var okCat = !category || card.dataset.category === category;
+      var okMan = !manufacturer || card.dataset.manufacturer === manufacturer;
+      var okSrv = !service || card.dataset.service === service;
+      var okSize = !size || card.dataset.size === size;
+
+      if (okCat && okMan && okSrv && okSize) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  // Навешиваем фильтры на все выпадающие списки
+  ['category', 'manufacturer', 'service', 'size'].forEach(function(id) {
+    document.getElementById(id).addEventListener('change', applyFilters);
+  });
+</script>
+
+</body>
+</html>
